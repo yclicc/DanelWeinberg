@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <title>Weinberg String Quartets</title>
+  </head>
+  <body>
+    <div id="chart" style="width:100%; height:100%;"></div>
+    <script>
+      fetch('weinberg.json')
+        .then(res => res.json())
+        .then(data => {
+          const quartets = [...new Set(data.map(d => d.quartet_number))];
+          const colorPalette = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+          //const colorPalette = ['#ce4ca2', '#58a862', '#8d67ca', '#9b9c3b', '#6095cd', '#cd4c47', '#bf698c', '#c88242']
+          //const colorPalette = ['#dc143c','#ffffff'];
+          const exceptionalColor = '#000000'
+          const romanNumerals = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
+          const quartetKey = ['', ' in C minor', ' in G', ' in D minor', ' in E flat', ' in B flat', '', ' in C', ' in C', ' in F sharp minor', ' in A minor', ' in F', '', '', '', '', ' in A flat minor', ' in D']
+          
+          const chartData = data.map(d => ({
+            value: d.duration,
+            name: `${d.quartet_number > 0 ? 'Quartet No. ' + d.quartet_number + quartetKey[d.quartet_number] +', ' : ''}${d.opus_number != '' ? 'Op. '+ d.opus_number : ''} \n${romanNumerals[d.movement_number]} ${d.title}`,
+            itemStyle: {
+              color: d.quartet_number < 0 ? exceptionalColor : colorPalette[(d.quartet_number - 1) % colorPalette.length],
+              opacity: d.movement_number % 2 === 0 ? 0.6 : 1
+            }
+          }));
+          
+          const chart = echarts.init(document.getElementById('chart'));
+          
+          const option = {
+            title: {
+                text: "Mieczyslaw Weinberg's String Quartets",
+                textAlign: 'center',
+                textVerticalAlign: 'middle',
+                textStyle: {
+                    fontSize: 25
+                },
+                left: '50%',
+                top: '5%',
+                subtext: "As recorded by Quatuor Danel",
+                subtextStyle: {
+                    fontSize: 20
+                }
+            },
+            tooltip: {
+              trigger: 'item',
+              formatter: params => {
+                const mins = Math.floor(params.value / 60);
+                const secs = params.value % 60;
+                return `${mins}m:${secs}s`;  
+              }
+            },
+            series: [
+              {
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                startAngle: 240,  // Start angle at the bottom
+                endAngle: 300,     // End angle before completing the circle
+                itemStyle: {
+                  borderRadius: 0,
+                  borderColor: '#000',
+                  borderWidth: 0
+                },
+                label: {
+                  show: false,
+                  position: 'center',
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 20,
+                    fontWeight: 'bold',
+                    opacity: 1
+                  }
+                },
+                data: chartData
+              }
+            ]
+          };
+
+          chart.setOption(option);
+        });
+    </script>
+  </body>
+</html>
